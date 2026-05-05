@@ -33,17 +33,14 @@ class _AssistantScreenState extends State<AssistantScreen>
   final FocusNode _inputFocus = FocusNode();
   final TextEditingController _searchCtrl = TextEditingController();
 
-  // ── Drawer state ───────────────────────────────────────────
-  // We track expansion as a bool and animate via TweenAnimationBuilder.
-  // This avoids any race between chat.drawerExpanded and a height value.
+  // Peek height: handle pill (3px) + "CHAT WITH SOL AI" label + padding
+  static const double _peekHeight = 80.0;
+
+  // Single bool drives open/closed — TweenAnimationBuilder handles the pixel
+  // height so there is never a mismatch between constraint and content.
   bool _drawerOpen = false;
 
-  // For drag gesture
   double _dragStartY = 0;
-  bool _isDragging = false;
-
-  // Peek height: handle bar (3px) + label row (~16px) + padding = ~52px
-  static const double _peekHeight = 52.0;
 
   @override
   void initState() {
@@ -66,12 +63,6 @@ class _AssistantScreenState extends State<AssistantScreen>
     super.dispose();
   }
 
-  double get _maxDrawerHeight {
-    final screenH = MediaQuery.of(context).size.height;
-    final isMobile = MediaQuery.of(context).size.width < 768;
-    return isMobile ? screenH - 58 : screenH;
-  }
-
   void _open() {
     setState(() => _drawerOpen = true);
     context.read<ChatProvider>().expandDrawer();
@@ -84,20 +75,12 @@ class _AssistantScreenState extends State<AssistantScreen>
 
   void _toggle() => _drawerOpen ? _close() : _open();
 
-  void _onDragStart(DragStartDetails d) {
-    _isDragging = true;
-    _dragStartY = d.globalPosition.dy;
-  }
+  void _onDragStart(DragStartDetails d) => _dragStartY = d.globalPosition.dy;
 
   void _onDragEnd(DragEndDetails d) {
-    if (!_isDragging) return;
-    _isDragging = false;
-    final draggedUp = _dragStartY - d.globalPosition.dy;
-    if (draggedUp > 40) {
-      _open();
-    } else if (draggedUp < -40) {
-      _close();
-    }
+    final dy = _dragStartY - d.globalPosition.dy;
+    if (dy > 40) _open();
+    if (dy < -40) _close();
   }
 
   void _sendMessage() {
@@ -155,22 +138,20 @@ class _AssistantScreenState extends State<AssistantScreen>
     );
   }
 
+  // ── Build ──────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Consumer<ChatProvider>(
       builder: (context, chat, _) {
-        // Sync provider → local state (e.g. when provider collapses externally)
         if (chat.drawerExpanded && !_drawerOpen) {
-          // Don't setState during build; schedule it.
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted && chat.drawerExpanded && !_drawerOpen) {
               setState(() => _drawerOpen = true);
             }
           });
         }
-
         if (chat.messages.isNotEmpty) {
           WidgetsBinding.instance.addPostFrameCallback(
             (_) => _scrollToBottom(),
@@ -179,21 +160,22 @@ class _AssistantScreenState extends State<AssistantScreen>
 
         return Scaffold(
           backgroundColor: AppColors.bg,
-          body: SafeArea(
-            child: AppBackground(child: _buildLayout(context, chat, isMobile)),
+          body: AppBackground(
+            child: isMobile
+                ? _buildMobileLayout(context, chat)
+                : _buildDesktopLayout(context, chat),
           ),
         );
       },
     );
   }
 
-  Widget _buildLayout(BuildContext ctx, ChatProvider chat, bool isMobile) =>
-      isMobile ? _buildMobileLayout(ctx, chat) : _buildDesktopLayout(ctx, chat);
-
+  // ── Desktop: sidebar + main area side by side ──────────────
   Widget _buildDesktopLayout(BuildContext ctx, ChatProvider chat) {
     return Row(
       children: [
         const AppSidebar(),
+        // Subtle vertical divider glow
         Container(
           width: 1,
           decoration: const BoxDecoration(
@@ -210,35 +192,103 @@ class _AssistantScreenState extends State<AssistantScreen>
             ),
           ),
         ),
-        Expanded(child: _buildMain(ctx, chat, isMobile: false)),
+        // LayoutBuilder gives the true pixel height of this column,
+        // avoiding the MediaQuery-vs-actual-space mismatch on Linux.
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) => _buildMainArea(
+              ctx,
+              chat,
+              availableHeight: constraints.maxHeight,
+            ),
+          ),
+        ),
       ],
     );
   }
 
+  // ── Mobile: topbar + main area stacked ────────────────────
   Widget _buildMobileLayout(BuildContext ctx, ChatProvider chat) {
+    return Column(
+      children: [
+        // Fixed topbar
+        _buildTopbar(chat),
+        // Main area fills the rest — LayoutBuilder measures only this portion,
+        // so the drawer never tries to be taller than the space below the topbar.
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) => Stack(
+              children: [
+                // Hero + suggestion cards (hidden when chat is open)
+                _buildScrollableHome(chat),
+                // Chat shell anchored to bottom of THIS stack
+                _buildChatShell(chat, constraints.maxHeight),
+                // Sidebar overlay (mobile only)
+                if (chat.sidebarOpen) ...[
+                  GestureDetector(
+                    onTap: chat.closeSidebar,
+                    child: Container(color: Colors.black54),
+                  ),
+                  const Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: AppSidebar(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Shared main area (desktop uses this directly) ──────────
+  Widget _buildMainArea(
+    BuildContext ctx,
+    ChatProvider chat, {
+    required double availableHeight,
+  }) {
     return Stack(
       children: [
-        Column(
-          children: [
-            _buildTopbar(chat),
-            Expanded(child: _buildMain(ctx, chat, isMobile: true)),
-          ],
-        ),
-        if (chat.sidebarOpen) ...[
-          GestureDetector(
-            onTap: chat.closeSidebar,
-            child: Container(color: Colors.black54),
-          ),
-          const Positioned(left: 0, top: 0, bottom: 0, child: AppSidebar()),
-        ],
+        _buildScrollableHome(chat),
+        _buildChatShell(chat, availableHeight),
       ],
     );
   }
 
+  // ── Scrollable hero + suggestion cards ────────────────────
+  Widget _buildScrollableHome(ChatProvider chat) {
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 300),
+      opacity: _drawerOpen ? 0 : 1,
+      child: IgnorePointer(
+        ignoring: _drawerOpen,
+        child: SingleChildScrollView(
+          controller: _mainScroll,
+          child: Column(
+            children: [
+              const HeroSection(),
+              SuggestionCards(onCardTap: _quickAsk),
+              // Space so content isn't hidden under collapsed shell
+              const SizedBox(height: _peekHeight + 40),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Mobile topbar ──────────────────────────────────────────
   Widget _buildTopbar(ChatProvider chat) {
     return Container(
-      height: 58,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 58 + MediaQuery.of(context).padding.top,
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: MediaQuery.of(context).padding.top,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(bottom: BorderSide(color: AppColors.border)),
@@ -283,63 +333,32 @@ class _AssistantScreenState extends State<AssistantScreen>
     );
   }
 
-  Widget _buildMain(
-    BuildContext ctx,
-    ChatProvider chat, {
-    required bool isMobile,
-  }) {
-    return Stack(
-      children: [
-        // Hero + cards — hidden when drawer is open
-        if (!_drawerOpen)
-  SingleChildScrollView(
-    controller: _mainScroll,
-    child: Column(
-      children: [
-        const HeroSection(),
-        SuggestionCards(onCardTap: _quickAsk),
-        const SizedBox(height: _peekHeight + 40),
-      ],
-    ),
-  ),
-        // Chat shell
-        _buildChatShell(chat),
-      ],
-    );
-  }
-
   // ── Chat Shell ─────────────────────────────────────────────
-  Widget _buildChatShell(ChatProvider chat) {
-    final isMobile = MediaQuery.of(context).size.width < 768;
+  // availableHeight comes from LayoutBuilder — it is the true pixel height
+  // of the Stack this shell lives in, on every platform including Linux desktop.
+  Widget _buildChatShell(ChatProvider chat, double availableHeight) {
     return Positioned(
       left: 0,
       right: 0,
-      top: isMobile ? 58 : 0,
       bottom: 0,
       child: GestureDetector(
         onVerticalDragStart: _onDragStart,
         onVerticalDragEnd: _onDragEnd,
-        // TweenAnimationBuilder owns the height value entirely.
-        // The child is NEVER built until the tween delivers a value,
-        // so there is zero chance of a height mismatch between
-        // the layout constraint and the content branch.
         child: TweenAnimationBuilder<double>(
           tween: Tween<double>(
-            begin: _drawerOpen ? _maxDrawerHeight : _peekHeight,
-            end: _drawerOpen ? _maxDrawerHeight : _peekHeight,
+            begin: _drawerOpen ? availableHeight : _peekHeight,
+            end: _drawerOpen ? availableHeight : _peekHeight,
           ),
           duration: const Duration(milliseconds: 400),
           curve: Curves.easeInOut,
           builder: (context, height, _) {
-            // All decisions come from the ANIMATED height value, not from
-            // any boolean flag.  This is the fix: the boolean and the
-            // pixel value are always in sync here.
+            // Every branch decision is derived from the same `height` double
+            // that is also the layout constraint. No boolean can disagree.
             final bool showFull = height > 180;
-            final bool isMobile = MediaQuery.of(context).size.width < 768;
-            final bool showTopbar = isMobile ? true : height > 260;
-            final bool showSearch = chat.searchBarOpen && height > 320;
-            final bool showReco = chat.showRecoBar && height > 340;
-            final bool showComposer = height > 240;
+            final bool showTopbar = height > 160;
+            final bool showSearch = chat.searchBarOpen && height > 280;
+            final bool showReco = chat.showRecoBar && height > 300;
+            final bool showComposer = height > 200;
 
             return SizedBox(
               height: height,
@@ -364,17 +383,16 @@ class _AssistantScreenState extends State<AssistantScreen>
                     ),
                   ],
                 ),
-                // ClipRect prevents any child painting outside SizedBox.
                 child: ClipRect(
                   child: showFull
-                      ? _buildExpandedContent(
+                      ? _buildExpandedShell(
                           chat: chat,
                           showTopbar: showTopbar,
                           showSearch: showSearch,
                           showReco: showReco,
                           showComposer: showComposer,
                         )
-                      : _buildCollapsedContent(),
+                      : _buildPeekShell(),
                 ),
               ),
             );
@@ -384,8 +402,8 @@ class _AssistantScreenState extends State<AssistantScreen>
     );
   }
 
-  // Collapsed: only the drag handle, sized to exactly _peekHeight.
-  Widget _buildCollapsedContent() {
+  // ── Collapsed shell — handle pill + label only ─────────────
+  Widget _buildPeekShell() {
     return SizedBox(
       height: _peekHeight,
       width: double.infinity,
@@ -393,69 +411,62 @@ class _AssistantScreenState extends State<AssistantScreen>
     );
   }
 
-  // Expanded: full chat UI filling the available height.
-  Widget _buildExpandedContent({
+  // ── Expanded shell — full chat UI ─────────────────────────
+  Widget _buildExpandedShell({
     required ChatProvider chat,
     required bool showTopbar,
     required bool showSearch,
     required bool showReco,
     required bool showComposer,
   }) {
-    return SafeArea(
-      top: false,
-      bottom: false,
-      child: Padding(
-        padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            _DrawerHandle(isExpanded: true, onTap: _toggle),
+    return Column(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        _DrawerHandle(isExpanded: true, onTap: _toggle),
 
-            if (showTopbar)
-              _ChatTopbar(
-                onSearch: () {
-                  chat.toggleSearchBar();
-                  if (chat.searchBarOpen) {
-                    Future.delayed(
-                      const Duration(milliseconds: 50),
-                      _searchCtrl.clear,
-                    );
-                  }
-                },
-                onExport: _exportChat,
-              ),
+        if (showTopbar)
+          _ChatTopbar(
+            onSearch: () {
+              chat.toggleSearchBar();
+              if (chat.searchBarOpen) {
+                Future.delayed(
+                  const Duration(milliseconds: 50),
+                  _searchCtrl.clear,
+                );
+              }
+            },
+            onExport: _exportChat,
+          ),
 
-            if (showSearch)
-              _ChatSearchBar(
-                controller: _searchCtrl,
-                onChanged: chat.updateSearch,
-                onClose: () {
-                  chat.toggleSearchBar();
-                  _searchCtrl.clear();
-                },
-              ),
+        if (showSearch)
+          _ChatSearchBar(
+            controller: _searchCtrl,
+            onChanged: chat.updateSearch,
+            onClose: () {
+              chat.toggleSearchBar();
+              _searchCtrl.clear();
+            },
+          ),
 
-            Expanded(
-              child: _MessagesList(
-                messages: _filteredMessages(chat),
-                isTyping: chat.isTyping,
-                scrollController: _msgScroll,
-                searchQuery: chat.searchQuery,
-              ),
-            ),
-
-            if (showReco) RecoBar(chips: chat.recoChips, onChipTap: _quickAsk),
-
-            if (showComposer)
-              ChatComposer(
-                controller: _inputCtrl,
-                onSend: _sendMessage,
-                disabled: chat.isTyping,
-                focusNode: _inputFocus,
-              ),
-          ],
+        Expanded(
+          child: _MessagesList(
+            messages: _filteredMessages(chat),
+            isTyping: chat.isTyping,
+            scrollController: _msgScroll,
+            searchQuery: chat.searchQuery,
+          ),
         ),
-      ),
+
+        if (showReco) RecoBar(chips: chat.recoChips, onChipTap: _quickAsk),
+
+        if (showComposer)
+          ChatComposer(
+            controller: _inputCtrl,
+            onSend: _sendMessage,
+            disabled: chat.isTyping,
+            focusNode: _inputFocus,
+          ),
+      ],
     );
   }
 
@@ -473,6 +484,7 @@ class _DrawerHandle extends StatefulWidget {
   final bool isExpanded;
   final VoidCallback onTap;
   const _DrawerHandle({required this.isExpanded, required this.onTap});
+
   @override
   State<_DrawerHandle> createState() => _DrawerHandleState();
 }
@@ -488,7 +500,7 @@ class _DrawerHandleState extends State<_DrawerHandle> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: SizedBox(
-          height: widget.isExpanded ? 24 : 52,
+          height: widget.isExpanded ? 36 : 52,
           width: double.infinity,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -544,7 +556,7 @@ class _ChatTopbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 25),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: AppColors.border)),
       ),
@@ -602,12 +614,14 @@ class _ActBtn extends StatefulWidget {
   final IconData icon;
   final VoidCallback onTap;
   const _ActBtn({required this.icon, required this.onTap});
+
   @override
   State<_ActBtn> createState() => _ActBtnState();
 }
 
 class _ActBtnState extends State<_ActBtn> {
   bool _hovered = false;
+
   @override
   Widget build(BuildContext context) {
     return MouseRegion(

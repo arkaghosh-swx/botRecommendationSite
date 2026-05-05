@@ -25,10 +25,7 @@ class ChatSession {
 
   void addMessage(ChatMessage msg) {
     messages.add(msg);
-    // Auto-label from first user message
-    if (msg.role == MessageRole.user && !hasUserMessages) {
-      label = msg.text.length > 38 ? '${msg.text.substring(0, 38)}…' : msg.text;
-    } else if (msg.role == MessageRole.user &&
+    if (msg.role == MessageRole.user &&
         messages.where((m) => m.role == MessageRole.user).length == 1) {
       label = msg.text.length > 38 ? '${msg.text.substring(0, 38)}…' : msg.text;
     }

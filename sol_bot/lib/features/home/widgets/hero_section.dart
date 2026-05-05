@@ -192,32 +192,18 @@ class _StatsStrip extends StatelessWidget {
           ),
         ],
       ),
-      child: isMobile
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: AppConstants.stats.map((s) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: _Stat(value: s['value']!, label: s['label']!),
-                );
-              }).toList(),
-            )
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (int i = 0; i < AppConstants.stats.length; i++) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    child: _Stat(
-                      value: AppConstants.stats[i]['value']!,
-                      label: AppConstants.stats[i]['label']!,
-                    ),
-                  ),
-                  if (i < AppConstants.stats.length - 1)
-                    Container(width: 1, height: 40, color: AppColors.border2),
-                ],
-              ],
-            ),
+      child: Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: AppConstants.stats.map((s) {
+    return Expanded(
+      child: Column(
+        children: [
+          _Stat(value: s['value']!, label: s['label']!),
+        ],
+      ),
+    );
+  }).toList(),
+),
     );
   }
 }
