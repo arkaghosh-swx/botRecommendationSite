@@ -411,11 +411,15 @@ roamTick();
 /* ══════════════════════════════════════════
    DRAG — mouse + touch
 ══════════════════════════════════════════ */
-let isDragging = false;
-let dragOffsetX = 0;
-let dragOffsetY = 0;
-let hasMoved = false;   // distinguish drag vs click
-let resumeTimer = null;
+// let isDragging = false;
+// let dragOffsetX = 0;
+// let dragOffsetY = 0;
+// let hasMoved = false;   
+// distinguish drag vs click
+// let resumeTimer = null;
+
+let dragStartX = 0, dragStartY = 0;
+const DRAG_THRESHOLD = 8;
 
 function getEventXY(e) {
     if (e.touches) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -423,24 +427,21 @@ function getEventXY(e) {
 }
 
 function onDragStart(e) {
-    // Don't start drag on the CTA buttons inside Sol
     if (e.target.closest("a, button")) return;
 
     const { x, y } = getEventXY(e);
     isDragging = true;
-    hasMoved = false;
+    hasMoved = false;          // ← reset every time
+    dragStartX = x;            // ← record start position
+    dragStartY = y;
     dragOffsetX = x - botX;
     dragOffsetY = y - botY;
 
     clearTimeout(resumeTimer);
-
     agentBot.style.cursor = "grabbing";
-    agentBot.style.animation = "none";        // pause float bob while dragging
+    agentBot.style.animation = "none";
     agentBot.style.transition = "none";
 
-    agentSay("✋ Dragging me around?");
-
-    // Prevent text selection while dragging
     e.preventDefault();
 }
 
@@ -448,7 +449,16 @@ function onDragMove(e) {
     if (!isDragging) return;
     const { x, y } = getEventXY(e);
 
-    // Clamp within viewport with a margin
+    // Only mark as a real drag if finger moved beyond threshold
+    if (!hasMoved) {
+        const dx = Math.abs(x - dragStartX);
+        const dy = Math.abs(y - dragStartY);
+        if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) {
+            hasMoved = true;
+            agentSay("✋ Dragging me around?");
+        }
+    }
+
     const margin = 20;
     botX = Math.min(Math.max(x - dragOffsetX, margin), window.innerWidth - 90 - margin);
     botY = Math.min(Math.max(y - dragOffsetY, margin), window.innerHeight - 110 - margin);
@@ -458,28 +468,32 @@ function onDragMove(e) {
     agentBot.style.bottom = "auto";
 
     updateBubbleSide();
-    hasMoved = true;
     e.preventDefault();
 }
 
 function onDragEnd(e) {
     if (!isDragging) return;
     isDragging = false;
-
     agentBot.style.cursor = "grab";
-    agentBot.style.animation = "";   // restore float bob
+    agentBot.style.animation = "";
 
     if (hasMoved) {
-        // Drop — Sol stays put for 2s, then resumes roaming from new spot
         agentSay("📌 Dropped! I'll roam from here.");
         targetX = botX;
         targetY = botY;
-
         resumeTimer = setTimeout(() => {
             agentSay("🚶 Back to roaming!");
             newRoamTarget();
         }, 2000);
+    } else {
+        // It was a TAP — open FAQ directly here on touchend
+        // (avoids relying on the 'click' event which is blocked by preventDefault)
+        agentSay("📚 Opening FAQs...");
+        if (typeof openFaqDrawer === "function") openFaqDrawer();
     }
+
+    // Reset for next interaction
+    hasMoved = false;
 }
 
 // Mouse events
@@ -494,11 +508,20 @@ document.addEventListener("touchend", onDragEnd);
 
 // ── Click Sol → open FAQ drawer (only if not dragged) ──
 let clickIdx = 0;
-agentBot.addEventListener("click", () => {
-    if (hasMoved) return;   // was a drag, not a click
-    agentSay("📚 Opening FAQs...");
+// agentBot.addEventListener("click", () => {
+//     if (hasMoved) return;   // was a drag, not a click
+//     agentSay("📚 Opening FAQs...");
     // openFaqDrawer is defined in faq.js — called after page is visible
-    if (typeof openFaqDrawer === "function") {
-        openFaqDrawer();
-    }
+//     if (typeof openFaqDrawer === "function") {
+//         openFaqDrawer();
+//     }
+// });
+
+// ── REMOVE or guard the existing click listener so it only fires on mouse ──
+agentBot.addEventListener("click", (e) => {
+    // On touch devices this won't fire (preventDefault was called),
+    // so this handles mouse-only clicks
+    if (hasMoved) return;
+    agentSay("📚 Opening FAQs...");
+    if (typeof openFaqDrawer === "function") openFaqDrawer();
 });

@@ -51,7 +51,7 @@ const agentBotEl = document.getElementById("agentBot");
    RLS: enable read for anon
 ══════════════════════════════════════════ */
 async function loadFaqs() {
-    showState("loading");
+    showState("content");
 
     try {
         const { data, error } = await db
@@ -73,12 +73,34 @@ async function loadFaqs() {
         showState("error");
     }
 }
+function initContinueDropdown() {
+    const input = document.getElementById("faqContinueInput");
+    const clear = document.getElementById("faqContinueClear");
 
+    if (!input) return;
+
+    input.addEventListener("input", () => {
+        const val = input.value;
+        if (clear) clear.style.display = val.length > 0 ? "block" : "none";
+        searchFaqs(val);
+        // keep the existing faqSearchInput in sync if it exists
+        if (faqSearchInput) faqSearchInput.value = val;
+    });
+
+    if (clear) {
+        clear.addEventListener("click", () => {
+            input.value = "";
+            clear.style.display = "none";
+            searchFaqs("");
+            if (faqSearchInput) faqSearchInput.value = "";
+            input.focus();
+        });
+    }
+}
 /* ══════════════════════════════════════════
    BUILD CATEGORY TABS
 ══════════════════════════════════════════ */
 function buildCategoryTabs() {
-    // Extract unique categories preserving order of first appearance
     const seen = new Set();
     const categories = [];
     allFaqs.forEach(faq => {
@@ -90,7 +112,6 @@ function buildCategoryTabs() {
 
     faqCategoryTabs.innerHTML = "";
 
-    // "All" tab
     const allBtn = document.createElement("button");
     allBtn.className = "faq-cat-btn active";
     allBtn.textContent = `All (${allFaqs.length})`;
@@ -98,7 +119,6 @@ function buildCategoryTabs() {
     allBtn.onclick = () => switchCategory("all", allBtn);
     faqCategoryTabs.appendChild(allBtn);
 
-    // Category tabs
     categories.forEach(cat => {
         const count = allFaqs.filter(f => f.category === cat).length;
         const btn = document.createElement("button");
@@ -108,6 +128,9 @@ function buildCategoryTabs() {
         btn.onclick = () => switchCategory(cat, btn);
         faqCategoryTabs.appendChild(btn);
     });
+
+    // ← add this line
+    initTabArrows();
 }
 
 /* ══════════════════════════════════════════
@@ -288,13 +311,10 @@ function openFaqDrawer() {
     faqOverlay.classList.add("active");
     document.body.style.overflow = "hidden";
 
-    // Hide hint bubble
     hideSolHint();
 
-    // Load FAQs on first open
     if (!faqLoaded) loadFaqs();
 
-    // Tell Sol
     if (typeof agentSay === "function") agentSay("📖 Here are our FAQs!");
 }
 
@@ -303,17 +323,22 @@ function closeFaqDrawer() {
     faqOverlay.classList.remove("active");
     document.body.style.overflow = "";
 
-    // Clear search
-    if (faqSearchInput) faqSearchInput.value = "";
-    if (faqSearchClear) faqSearchClear.style.display = "none";
+    // Collapse dropdown and reset scroll
+    const dropdown = document.getElementById("faqContinueDropdown");
+    if (dropdown) {
+        dropdown.classList.remove("open");
+        dropdown.scrollTop = 0;
+    }
 
-    // ── After closing FAQ for the first time, reveal the recommendation modal ──
+    const continueInput = document.getElementById("faqContinueInput");
+    if (continueInput) continueInput.value = "";
+    const continueClear = document.getElementById("faqContinueClear");
+    if (continueClear) continueClear.style.display = "none";
+
     const justOnboarded = sessionStorage.getItem("solworxs_show_modal_after_faq");
     if (justOnboarded) {
         sessionStorage.removeItem("solworxs_show_modal_after_faq");
-        // Modal is already populated (geo ran in background), just make it visible
         if (typeof agentSay === "function") agentSay("🤖 Now pick your bot!");
-        // Modal is already showing — nothing to do, it was never hidden
     }
 }
 
@@ -353,6 +378,37 @@ function positionSolHint() {
     solFaqHint.style.top = (rect.top - 52) + "px";
 }
 
+
+/* ══════════════════════════════════════════
+   TABS ARROW SCROLL
+══════════════════════════════════════════ */
+function scrollTabs(direction) {
+    const tabs = document.getElementById("faqCategoryTabs");
+    if (!tabs) return;
+    tabs.scrollBy({ left: direction * 120, behavior: "smooth" });
+    setTimeout(updateTabArrows, 320);
+}
+
+function updateTabArrows() {
+    const tabs = document.getElementById("faqCategoryTabs");
+    const leftBtn = document.getElementById("tabsArrowLeft");
+    const rightBtn = document.getElementById("tabsArrowRight");
+    if (!tabs || !leftBtn || !rightBtn) return;
+
+    const atStart = tabs.scrollLeft <= 4;
+    const atEnd = tabs.scrollLeft + tabs.clientWidth >= tabs.scrollWidth - 4;
+
+    leftBtn.classList.toggle("hidden", atStart);
+    rightBtn.classList.toggle("hidden", atEnd);
+}
+
+// Wire up scroll listener on the tabs container after FAQs load
+function initTabArrows() {
+    const tabs = document.getElementById("faqCategoryTabs");
+    if (!tabs) return;
+    tabs.addEventListener("scroll", updateTabArrows);
+    updateTabArrows();
+}
 /* Reposition hint if Sol moves */
 const _origRoamTick = window.roamTick;
 
@@ -365,11 +421,11 @@ function initFaqSolIntegration() {
     if (!agentBotEl) return;
 
     // Listen for Sol clicks and open FAQ drawer
-    agentBotEl.addEventListener("click", () => {
-        // Only open if not dragging (hasMoved is set in script.js)
-        if (typeof hasMoved !== "undefined" && hasMoved) return;
-        openFaqDrawer();
-    });
+    // agentBotEl.addEventListener("click", () => {
+    // Only open if not dragging (hasMoved is set in script.js)
+    //     if (typeof hasMoved !== "undefined" && hasMoved) return;
+    //     openFaqDrawer();
+    // });
 }
 
 /* ══════════════════════════════════════════
@@ -413,11 +469,16 @@ const FAQ_SEEN_KEY = "solworxs_faq_seen";
 })();
 
 function keepReadingFaqs() {
-    // Smooth scroll back to top/content
-    faqContent.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
+    const dropdown = document.getElementById("faqContinueDropdown");
+    const input = document.getElementById("faqContinueInput");
+
+    const isOpen = dropdown.classList.contains("open");
+    if (!isOpen) {
+        dropdown.classList.add("open");
+        setTimeout(() => input && input.focus(), 450);
+    } else {
+        dropdown.classList.remove("open");
+    }
 
     if (typeof agentSay === "function") {
         agentSay("📖 Explore all the FAQs!");
@@ -448,4 +509,5 @@ function startRecommendedBot() {
 ══════════════════════════════════════════ */
 (function initFaq() {
     initFaqSolIntegration();
+    initContinueDropdown();
 })();

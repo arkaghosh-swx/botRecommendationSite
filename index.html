@@ -246,7 +246,7 @@
             <div class="faq-footer-text">
                 <h4>Ready to continue?</h4>
                 <p>
-                    Keep exploring FAQs or start interacting with your recommended bot.
+                    So let's start the consultion with the bot or you've any queries.
                 </p>
             </div>
 
@@ -266,38 +266,68 @@
 
         </div>
 
-        <div class="faq-search-wrap">
+        <!-- <div class="faq-search-wrap">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="faqSearchInput" placeholder="Search questions…" oninput="searchFaqs(this.value)" />
             <button class="faq-search-clear" id="faqSearchClear" onclick="clearFaqSearch()" style="display:none">
                 <i class="fa-solid fa-xmark"></i>
             </button>
-        </div>
+        </div> -->
 
-        <div class="faq-category-tabs" id="faqCategoryTabs"></div>
+        <!-- Continue FAQs collapsible search dropdown -->
+        <!-- Continue FAQs collapsible dropdown — wraps search + tabs + all content -->
+        <div class="faq-continue-dropdown" id="faqContinueDropdown">
 
-        <div class="faq-loading" id="faqLoading">
-            <div class="faq-skeleton"></div>
-            <div class="faq-skeleton"></div>
-            <div class="faq-skeleton"></div>
-            <div class="faq-loading-dots">
-                <span></span><span></span><span></span>
+            <div class="faq-sticky-header">
+
+                <div class="faq-continue-inner">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="faqContinueInput" placeholder="Search all FAQs…" />
+                    <button class="faq-continue-clear" id="faqContinueClear">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="faq-tabs-row">
+                    <button class="faq-tabs-arrow faq-tabs-arrow-left" id="tabsArrowLeft" onclick="scrollTabs(-1)"
+                        aria-label="Scroll left">
+                        <i class="fa-solid fa-angle-left"></i>
+                    </button>
+                    <div class="faq-category-tabs" id="faqCategoryTabs"></div>
+                    <button class="faq-tabs-arrow faq-tabs-arrow-right" id="tabsArrowRight" onclick="scrollTabs(1)"
+                        aria-label="Scroll right">
+                        <i class="fa-solid fa-angle-right"></i>
+                    </button>
+                </div>
+
             </div>
-            <p>Sol is fetching your answers…</p>
-        </div>
 
-        <div class="faq-error" id="faqError" style="display:none">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <p>Couldn't load FAQs right now.</p>
-            <button onclick="loadFaqs()">Try again</button>
-        </div>
 
-        <div class="faq-content" id="faqContent" style="display:none"></div>
 
-        <div class="faq-empty" id="faqEmpty" style="display:none">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <p>No results for "<span id="faqEmptyQuery"></span>"</p>
-            <small>Try different keywords</small>
+            <div class="faq-loading" id="faqLoading">
+                <div class="faq-skeleton"></div>
+                <div class="faq-skeleton"></div>
+                <div class="faq-skeleton"></div>
+                <div class="faq-loading-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <p>Sol is fetching your answers…</p>
+            </div>
+
+            <div class="faq-error" id="faqError" style="display:none">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <p>Couldn't load FAQs right now.</p>
+                <button onclick="loadFaqs()">Try again</button>
+            </div>
+
+            <div class="faq-content" id="faqContent" style="display:none"></div>
+
+            <div class="faq-empty" id="faqEmpty" style="display:none">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <p>No results for "<span id="faqEmptyQuery"></span>"</p>
+                <small>Try different keywords</small>
+            </div>
+
         </div>
 
 
