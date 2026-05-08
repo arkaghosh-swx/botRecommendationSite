@@ -15,7 +15,7 @@ void showSettingsModal(BuildContext context) {
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withOpacity(0.65),
+    barrierColor: Colors.black.withValues(alpha:0.65),
     builder: (_) => const _SettingsSheet(),
   );
 }
@@ -574,7 +574,7 @@ class _ActionButtonState extends State<_ActionButton> {
           decoration: BoxDecoration(
             color: _hovered
                 ? (widget.isDanger
-                      ? dangerColor.withOpacity(0.1)
+                      ? dangerColor.withValues(alpha:0.1)
                       : AppColors.accentDim)
                 : AppColors.surface2,
             borderRadius: BorderRadius.circular(8),

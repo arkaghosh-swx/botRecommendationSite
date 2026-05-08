@@ -1,3 +1,9 @@
 {
-    "cmake.sourceDirectory": "/home/solworxs11/Public/botRecommendationSite/Swx Bot/linux"
+  "cmake.sourceDirectory": "/home/solworxs11/Public/botRecommendationSite/Swx_Bot/linux",
+  "C_Cpp.errorSquiggles": "disabled",
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "files.exclude": {
+    "**/linux/runner/*.cc": true,
+    "**/linux/runner/*.h": true
+  }
 }

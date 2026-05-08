@@ -88,7 +88,7 @@ class _Glow extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
-            colors: [color.withOpacity(opacity), Colors.transparent],
+            colors: [color.withValues(alpha:opacity), Colors.transparent],
             stops: const [0.0, 0.7],
           ),
         ),
@@ -101,10 +101,10 @@ class _BgGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final hPaint = Paint()
-      ..color = const Color(0xFF8FB3A5).withOpacity(0.05)
+      ..color = const Color(0xFF8FB3A5).withValues(alpha:0.05)
       ..strokeWidth = 1;
     final vPaint = Paint()
-      ..color = const Color(0xFF3B82F6).withOpacity(0.03)
+      ..color = const Color(0xFF3B82F6).withValues(alpha:0.03)
       ..strokeWidth = 1;
 
     const step = 52.0;

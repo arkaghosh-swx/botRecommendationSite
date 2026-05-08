@@ -305,7 +305,7 @@ class _NewChatBtn extends StatelessWidget {
           borderRadius: BorderRadius.circular(13),
           boxShadow: [
             BoxShadow(
-              color: AppColors.accent.withOpacity(0.25),
+              color: AppColors.accent.withValues(alpha:0.25),
               blurRadius: 20,
               offset: const Offset(0, 6),
             ),

@@ -214,9 +214,9 @@ class _ChatScreenState extends State<ChatScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.18),
+                  color: Colors.black.withValues(alpha:0.18),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  border: Border.all(color: Colors.white.withValues(alpha:0.05)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -224,7 +224,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     Text(
                       'Powered by ',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.55),
+                        color: Colors.white.withValues(alpha:0.55),
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
                       ),
@@ -233,7 +233,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     Text(
                       'Solwor',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.82),
+                        color: Colors.white.withValues(alpha:0.82),
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                       ),
@@ -255,7 +255,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     Text(
                       'S™',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.82),
+                        color: Colors.white.withValues(alpha:0.82),
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                       ),

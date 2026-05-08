@@ -141,7 +141,7 @@ class _HeroPillState extends State<_HeroPill>
               width: 6,
               height: 6,
               decoration: BoxDecoration(
-                color: AppColors.accent.withOpacity(0.4 + 0.6 * _ctrl.value),
+                color: AppColors.accent.withValues(alpha:0.4 + 0.6 * _ctrl.value),
                 shape: BoxShape.circle,
               ),
             ),
@@ -181,12 +181,12 @@ class _StatsStrip extends StatelessWidget {
         border: Border.all(color: AppColors.border2),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF3B82F6).withOpacity(0.08),
+            color: const Color(0xFF3B82F6).withValues(alpha:0.08),
             spreadRadius: 1,
             blurRadius: 0,
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha:0.3),
             blurRadius: 24,
             offset: const Offset(0, 4),
           ),
@@ -251,7 +251,7 @@ class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF3B82F6).withOpacity(0.04)
+      ..color = const Color(0xFF3B82F6).withValues(alpha:0.04)
       ..strokeWidth = 1;
 
     const step = 48.0;
@@ -284,7 +284,7 @@ class _Orb extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
-            colors: [color.withOpacity(opacity), Colors.transparent],
+            colors: [color.withValues(alpha:opacity), Colors.transparent],
           ),
         ),
       ),

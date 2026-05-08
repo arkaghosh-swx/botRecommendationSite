@@ -373,7 +373,7 @@ class _AssistantScreenState extends State<AssistantScreen>
                   border: Border.all(color: AppColors.border),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha:0.5),
                       blurRadius: 48,
                       offset: const Offset(0, -8),
                     ),
@@ -509,11 +509,20 @@ class _AssistantScreenState extends State<AssistantScreen>
                     const SizedBox(width: 1),
 
                     Text(
-                      'S™',
+                      'S',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Colors.white.withValues(alpha:0.82),
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
+                        fontFamily: 'Syne',
+                      ),
+                    ),
+                    Text(
+                      '®',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha:0.6),
+                        fontSize: 8,
+                        fontWeight: FontWeight.w400,
                       ),
                     ),
                   ],
@@ -589,7 +598,7 @@ class _DrawerHandleState extends State<_DrawerHandle> {
                         Text(
                           'Powered by ',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha:0.5),
                             fontSize: 9,
                             fontWeight: FontWeight.w500,
                           ),
@@ -598,7 +607,7 @@ class _DrawerHandleState extends State<_DrawerHandle> {
                         Text(
                           'Solwor',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.82),
+                            color: Colors.white.withValues(alpha:0.82),
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
                             fontFamily: 'Syne',
@@ -619,12 +628,20 @@ class _DrawerHandleState extends State<_DrawerHandle> {
                         const SizedBox(width: 1),
 
                         Text(
-                          'S™',
+                          'S',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.82),
+                            color: Colors.white.withValues(alpha:0.82),
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
                             fontFamily: 'Syne',
+                          ),
+                        ),
+                        Text(
+                          '®',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 8,
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
                       ],
@@ -665,7 +682,7 @@ class _ChatTopbar extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.accentWa.withOpacity(0.5),
+                  color: AppColors.accentWa.withValues(alpha:0.5),
                   blurRadius: 8,
                 ),
               ],

@@ -53,7 +53,7 @@ class _ChatComposerState extends State<ChatComposer> {
                 boxShadow: _focused
                     ? [
                         BoxShadow(
-                          color: const Color(0xFF3B82F6).withOpacity(0.08),
+                          color: const Color(0xFF3B82F6).withValues(alpha:0.08),
                           blurRadius: 0,
                           spreadRadius: 3,
                         ),
@@ -112,7 +112,7 @@ class _ChatComposerState extends State<ChatComposer> {
                               ? []
                               : [
                                   BoxShadow(
-                                    color: AppColors.accent.withOpacity(0.3),
+                                    color: AppColors.accent.withValues(alpha:0.3),
                                     blurRadius: 18,
                                     offset: const Offset(0, 6),
                                   ),
@@ -122,7 +122,7 @@ class _ChatComposerState extends State<ChatComposer> {
                           Icons.send_rounded,
                           size: 18,
                           color: widget.disabled
-                              ? AppColors.text2.withOpacity(0.4)
+                              ? AppColors.text2.withValues(alpha:0.4)
                               : Colors.white,
                         ),
                       ),

@@ -107,7 +107,7 @@ class _SuggCardState extends State<_SuggCard> {
             boxShadow: _hovered
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha:0.3),
                       blurRadius: 32,
                       offset: const Offset(0, 12),
                     ),
@@ -156,7 +156,7 @@ class _SuggCardState extends State<_SuggCard> {
                       boxShadow: _hovered
                           ? [
                               BoxShadow(
-                                color: const Color(0xFF3B82F6).withOpacity(0.2),
+                                color: const Color(0xFF3B82F6).withValues(alpha:0.2),
                                 blurRadius: 16,
                               ),
                             ]

@@ -10,7 +10,7 @@ void showHelpModal(BuildContext context) {
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withOpacity(0.65),
+    barrierColor: Colors.black.withValues(alpha:0.65),
     builder: (_) => const _HelpSheet(),
   );
 }
