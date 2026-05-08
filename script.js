@@ -186,11 +186,11 @@ function closeModal(recommendedKey) {
 // });
 
 /* ── User clicks CTA (accept) ── */
-modalCTA.addEventListener("click", () => {
-    agentSay("🎉 Great pick! Enjoy the bot!");
+// modalCTA.addEventListener("click", () => {
+    // agentSay("🎉 Great pick! Enjoy the bot!");
     // Let the href do its job; also close modal in background
-    setTimeout(() => closeModal(null), 300);
-});
+//     setTimeout(() => closeModal(null), 300);
+// });
 
 /* ══════════════════════════════════════════
    GEO DETECTION
