@@ -20,31 +20,16 @@ class GroqService {
       ];
 
       final response = await http.post(
-        Uri.parse(AppConstants.groqBaseUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${AppConstants.groqApiKey}',
-        },
-        body: jsonEncode({
-          'model': AppConstants.groqModel,
-          'messages': messages,
-          'temperature': 0.7,
-          'max_tokens': 1024,
-          'stream': false,
-        }),
+        Uri.parse('${AppConstants.serverUrl}/api/chat'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'messages': messages}),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final choices = data['choices'] as List?;
-        if (choices != null && choices.isNotEmpty) {
-          return choices[0]['message']['content'] as String;
-        }
-        return 'No response received.';
+        return data['reply'] as String? ?? 'No response received.';
       } else {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final error = data['error'] as Map<String, dynamic>?;
-        return '⚠️ API Error: ${error?['message'] ?? response.statusCode}';
+        return '⚠️ Server error: ${response.statusCode}';
       }
     } catch (e) {
       return '⚠️ Connection failed. Please check your network and try again.';

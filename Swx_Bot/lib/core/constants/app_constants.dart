@@ -1,12 +1,7 @@
-// static const String groqApiKey = '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';
-
 // lib/core/constants/app_constants.dart
 class AppConstants {
-  // ── Groq API ────────────────────────────────────────────
-  static const String groqApiKey = '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';
-  static const String groqBaseUrl =
-      'https://api.groq.com/openai/v1/chat/completions';
-  static const String groqModel = 'llama-3.1-8b-instant';
+
+static const String serverUrl = 'https://botrecommendationsite-production.up.railway.app/';
 
   // ── Supabase ─────────────────────────────────────────────
   static const String supabaseUrl = 'https://sbzoxwvuoidtywvkabmz.supabase.co';
