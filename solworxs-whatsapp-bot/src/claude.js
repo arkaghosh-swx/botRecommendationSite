@@ -1,3 +1,4 @@
+// /home/solworxs11/Public/botRecommendationSite/solworxs-whatsapp-bot/src/claude.js
 const Anthropic = require("@anthropic-ai/sdk");
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });

@@ -1,3 +1,4 @@
+// /home/solworxs11/Public/botRecommendationSite/solworxs-whatsapp-bot/src/whatsapp.js
 const https = require("https");
 
 const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
