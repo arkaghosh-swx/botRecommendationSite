@@ -1,14 +1,14 @@
 /* ═══════════════════════════════════════════
-   SWX BOT — app.js
+   SWX BOT — /home/solworxs11/Public/botRecommendationSite/chatbots/assistant.js
    Matches Flutter app functionality exactly
 ═══════════════════════════════════════════ */
 
 // ── Config ────────────────────────────────
 
-const SUPABASE_URL = "https://sbzoxwvuoidtywvkabmz.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNiem94d3Z1b2lkdHl3dmthYm16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNDYzNTAsImV4cCI6MjA5MTcyMjM1MH0.IrfSKiuShXz0RA26fn5NFUS-VLk3mQAwJoSu28prju4";
+// const SUPABASE_URL = "https://sbzoxwvuoidtywvkabmz.supabase.co";
+// const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNiem94d3Z1b2lkdHl3dmthYm16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNDYzNTAsImV4cCI6MjA5MTcyMjM1MH0.IrfSKiuShXz0RA26fn5NFUS-VLk3mQAwJoSu28prju4";
 
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const SYSTEM_PROMPT = `
 You are Swx Bot — an intelligent support assistant.
@@ -345,31 +345,43 @@ function showRecos(text) {
 }
 
 // ── FAQ ───────────────────────────────────
+// async function fetchFaqs() {
+//     if (_cachedFaqs) return _cachedFaqs;
+//     const { data, error } = await sb
+//         .from("faqs")
+//         .select("id, question, answer, category, sort_order")
+//         .order("sort_order", { ascending: true });
+//     if (error) { console.error("FAQ error:", error); return []; }
+//     _cachedFaqs = data || [];
+//     return _cachedFaqs;
+// }
+
+// function buildFaqContext(faqs) {
+//     return faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join("\n\n");
+// }
+
+// function findDirectMatch(userText, faqs) {
+//     if (!faqs || !faqs.length) return null;
+//     const input = userText.toLowerCase();
+//     const words = input.split(" ").filter(w => w.length > 3);
+//     return faqs.find(f => {
+//         const q = f.question.toLowerCase();
+//         return words.some(w => q.includes(w));
+//     }) || null;
+// }
+
+// ── FAQ ───────────────────────────────────
 async function fetchFaqs() {
-    if (_cachedFaqs) return _cachedFaqs;
-    const { data, error } = await sb
-        .from("faqs")
-        .select("id, question, answer, category, sort_order")
-        .order("sort_order", { ascending: true });
-    if (error) { console.error("FAQ error:", error); return []; }
-    _cachedFaqs = data || [];
-    return _cachedFaqs;
+    return []; // Disabled — using server-side knowledge only
 }
 
 function buildFaqContext(faqs) {
-    return faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join("\n\n");
+    return ""; // No FAQ context needed
 }
 
 function findDirectMatch(userText, faqs) {
-    if (!faqs || !faqs.length) return null;
-    const input = userText.toLowerCase();
-    const words = input.split(" ").filter(w => w.length > 3);
-    return faqs.find(f => {
-        const q = f.question.toLowerCase();
-        return words.some(w => q.includes(w));
-    }) || null;
+    return null; // Always use AI — no direct matching
 }
-
 
 const SERVER_URL = "https://vibrant-charisma-production-b339.up.railway.app";
 
@@ -409,21 +421,12 @@ async function sendMessage() {
     saveToSession("user", text);
     showTypingIndicator();
 
-    const faqs = await fetchFaqs();
-    const faqContext = buildFaqContext(faqs);
-    const matched = findDirectMatch(text, faqs);
-
     let reply;
-    if (matched) {
-        reply = matched.answer;
-    } else {
-        const history = activeSession?.history || [];
-        history.push({ role: "user", content: text });
-        reply = await askGroq(text, faqContext, history);
-        history.push({ role: "assistant", content: reply });
-        if (activeSession) activeSession.history = history;
-    }
-
+    const history = activeSession?.history || [];
+    history.push({ role: "user", content: text });
+    reply = await askGroq(text, "", history);
+    history.push({ role: "assistant", content: reply });
+    if (activeSession) activeSession.history = history;
     removeTypingIndicator();
     appendMessage("bot", reply);
     saveToSession("bot", reply);
