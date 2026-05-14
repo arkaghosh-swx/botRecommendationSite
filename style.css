@@ -1305,7 +1305,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 1px;
 }
 
 .powered-text {
@@ -1317,7 +1317,7 @@ body {
 .powered-brand {
     display: flex;
     align-items: center;
-    gap: 3px;
+    gap: 1px;
 }
 
 .powered-name {

@@ -215,7 +215,7 @@ async function detectAndRecommend() {
         // India → WhatsApp
         // Others → AI
         currentRecommendedKey =
-            country === "Us" ? "whatsapp" : "ai";
+            country === "IN" ? "whatsapp" : "ai";
 
         populateModal(currentRecommendedKey, `📍 ${locStr}`);
 
