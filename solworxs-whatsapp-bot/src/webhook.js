@@ -164,8 +164,9 @@ async function handleMenuSelection(from, selectedId) {
     case "menu_contact":
       await sendTextMessage(from,
         "📞 *Contact Warrior Homoeopath*\n\n" +
-        "📧 Appointments: appointment@warriorhomoeopath.com\n" +
-        "📧 Enquiries: ask@warriorhomoeopath.com\n\n" +
+        // menu_contact case — update to:
+        "📧 Appointments: appointments@warriorhomeopath.com\n" +
+        "📧 Enquiries: hello@warriorhomeopath.com\n\n" +
         "📱 India: +91 9071961355\n" +
         "📱 UK: +44 7700 148710\n\n" +
         "🌐 Website: warriorhomeopath.com\n\n" +
